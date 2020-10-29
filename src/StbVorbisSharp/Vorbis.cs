@@ -9,6 +9,8 @@ namespace StbVorbisSharp
 		private readonly stb_vorbis_info _vorbisInfo;
 		private readonly byte[] _data;
 		private readonly float _lengthInSeconds;
+		private readonly int _length;
+		private readonly int _bufferCount;
 		private readonly short[] _songBuffer;
 		private int _decoded;
 
@@ -51,6 +53,14 @@ namespace StbVorbisSharp
 				return _lengthInSeconds;
 			}
 		}
+		
+		public float Length
+		{
+			get
+			{
+				return _length;
+			}
+		}
 
 		public short[] SongBuffer
 		{
@@ -68,7 +78,7 @@ namespace StbVorbisSharp
 			}
 		}
 
-		private Vorbis(byte[] data)
+		private Vorbis(byte[] data, int buffer = 0)
 		{
 			if (data == null)
 			{
@@ -86,12 +96,19 @@ namespace StbVorbisSharp
 			_vorbis = vorbis;
 			_vorbisInfo = stb_vorbis_get_info(vorbis);
 			_lengthInSeconds = stb_vorbis_stream_length_in_seconds(_vorbis);
+			_length = (int) stb_vorbis_stream_length_in_samples(_vorbis);
 
-			_songBuffer = new short[_vorbisInfo.sample_rate];
+			_bufferCount = buffer == 0 ? (int) _vorbisInfo.sample_rate : buffer;
+			_songBuffer = new short[_bufferCount];
 
 			Restart();
 		}
 
+		public void Seek(int samples)
+		{
+			stb_vorbis_seek(_vorbis, (uint) samples);
+		}
+		
 		public void Dispose()
 		{
 		}
@@ -105,13 +122,13 @@ namespace StbVorbisSharp
 		{
 			fixed (short* ptr = _songBuffer)
 			{
-				_decoded = stb_vorbis_get_samples_short_interleaved(_vorbis, _vorbisInfo.channels, ptr, (int)_vorbisInfo.sample_rate);
+				_decoded = stb_vorbis_get_samples_short_interleaved(_vorbis, _vorbisInfo.channels, ptr, _bufferCount);
 			}
 		}
 
-		public static Vorbis FromMemory(byte[] data)
+		public static Vorbis FromMemory(byte[] data, int buffer = 0)
 		{
-			return new Vorbis(data);
+			return new Vorbis(data, buffer);
 		}
 	}
 }
