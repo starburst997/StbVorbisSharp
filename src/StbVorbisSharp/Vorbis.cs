@@ -98,8 +98,11 @@ namespace StbVorbisSharp
 			_lengthInSeconds = stb_vorbis_stream_length_in_seconds(_vorbis);
 			_length = (int) stb_vorbis_stream_length_in_samples(_vorbis);
 
-			_bufferCount = buffer == 0 ? (int) _vorbisInfo.sample_rate : buffer;
-			_songBuffer = new short[_bufferCount];
+			if (buffer >= 0)
+			{
+				_bufferCount = buffer == 0 ? (int) _vorbisInfo.sample_rate : buffer;
+				_songBuffer = new short[_bufferCount];
+			}
 
 			Restart();
 		}
