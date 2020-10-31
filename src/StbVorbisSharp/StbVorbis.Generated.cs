@@ -3074,8 +3074,11 @@ namespace StbVorbisSharp
 
 		public static stb_vorbis vorbis_alloc(stb_vorbis f)
 		{
-			stb_vorbis p = new stb_vorbis();
-			return p;
+			return f;
+			
+			// TODO: Below didn't make sense in C#
+			//stb_vorbis p = new stb_vorbis();
+			//return p;
 		}
 
 		public static void stb_vorbis_flush_pushdata(stb_vorbis f)
