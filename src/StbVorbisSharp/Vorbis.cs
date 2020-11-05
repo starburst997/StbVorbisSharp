@@ -8,6 +8,7 @@ namespace StbVorbisSharp
 	{
 		private stb_vorbis_alloc* _vorbisAlloc;
 		private IntPtr _vorbisAllocPtr;
+		private bool _isAlloc;
 		
 		private stb_vorbis _vorbis;
 		private stb_vorbis_info _vorbisInfo;
@@ -18,7 +19,7 @@ namespace StbVorbisSharp
 
 		private byte* _data;
 		private IntPtr _dataPtr;
-		private bool _alloc;
+		private bool _allocData;
 
 		public stb_vorbis StbVorbis => _vorbis;
 		public stb_vorbis_info StbVorbisInfo => _vorbisInfo;
@@ -29,6 +30,11 @@ namespace StbVorbisSharp
 		public int Decoded => _decoded;
 		public int Position => _current;
 
+		public Vorbis()
+		{
+			
+		}
+		
 		public Vorbis(byte[] data)
 		{
 			//Alloc();
@@ -44,6 +50,9 @@ namespace StbVorbisSharp
 		// TODO: Does this mean we can re-use this class without any new alloc when loading a new file? Meaning we could recycle it?
 		private void Alloc()
 		{
+			Dispose();
+			
+			_isAlloc = true;
 			_vorbisAllocPtr = Marshal.AllocHGlobal(sizeof(stb_vorbis_alloc) * 1);
 			_vorbisAlloc = (stb_vorbis_alloc*) _vorbisAllocPtr.ToPointer();
 		}
@@ -55,7 +64,7 @@ namespace StbVorbisSharp
 			// Previously was using a fixed pointer outside a fixed statement, which is probably a bad idea (but was working!)
 			_dataPtr = Marshal.AllocHGlobal(data.Length * sizeof(byte));
 			_data = (byte*) _dataPtr.ToPointer();
-			_alloc = true;
+			_allocData = true;
 
 			var fileCopy = _data;
 			for (int i = 0; i < data.Length; i++)
@@ -87,18 +96,22 @@ namespace StbVorbisSharp
 		
 		public void Clear()
 		{
-			if (!_alloc) return;
+			if (!_allocData) return;
 			
-			_alloc = false;
+			_allocData = false;
 			Marshal.FreeHGlobal(_dataPtr);
 		}
 		
 		public void Dispose()
 		{
 			Clear();
-			
-			Marshal.FreeHGlobal(_vorbisAllocPtr);
-			_vorbisAlloc = null;
+
+			if (_isAlloc)
+			{
+				Marshal.FreeHGlobal(_vorbisAllocPtr);
+				_vorbisAlloc = null;
+				_isAlloc = false;
+			}
 		}
 
 		public void Restart()
@@ -116,6 +129,15 @@ namespace StbVorbisSharp
 
 				return decoded * _vorbisInfo.channels;
 			}
+		}
+		
+		public int Decode(float* samples, int offset, int count)
+		{
+			var decoded = stb_vorbis_get_samples_float_interleaved(_vorbis, _vorbisInfo.channels, samples + offset, count);
+			_current += decoded;
+			_decoded = decoded;
+
+			return decoded * _vorbisInfo.channels;
 		}
 
 		public static Vorbis FromMemory(byte[] data)
