@@ -26,7 +26,7 @@ namespace StbVorbisSharp
 		public int SampleRate => (int)_vorbisInfo.sample_rate;
 		public int Channels => _vorbisInfo.channels;
 		public float LengthInSeconds => _lengthInSeconds;
-		public float Length => _length;
+		public int Length => _length;
 		public int Decoded => _decoded;
 		public int Position => _current;
 
