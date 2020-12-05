@@ -13,5 +13,11 @@
     <Version>1.0.0.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Configurations>Debug;Release;Server</Configurations>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Server' ">
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
   </PropertyGroup>
 </Project>
